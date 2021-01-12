@@ -1,0 +1,17 @@
+# ./.tmuxinator.yml
+
+name: vite
+root: ./
+
+# pre_window: direnv allow
+
+windows:
+  - vite:
+      # Arrange panes in one of the five preset layouts: even-horizontal, even-
+      # vertical, main-horizontal, main-vertical, or tiled.
+      layout: even-vertical
+      panes:
+        - terminal: clear; echo "open http://localhost/admin/ or http://localhost/profile/"
+        - admin: cd ./repos/admin && yarn && yarn dev
+        - profile: cd ./repos/profile && yarn && yarn dev
+  

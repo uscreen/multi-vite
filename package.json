@@ -1,0 +1,16 @@
+{
+  "name": "multi-vite",
+  "version": "0.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "author": {
+    "name": "Marcus Spiegel",
+    "email": "spiegel@uscreen.de"
+  },
+  "devDependencies": {
+    "@uscreen.de/dev-service": "^0.6.1"
+  },
+  "services": [
+    "nginx"
+  ]
+}
