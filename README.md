@@ -3,9 +3,7 @@
 Vite 2 supports a very nice [multi-page](https://vitejs.dev/guide/build.html#multi-page-app) setup.
 The given "multi-page" feature shares one main vite dev server for multiple nested pages, which may now use different `src,` `components,` etc.
 
-Similar, but in contrast to that, a "multi-vite" setup should be able to serve multiple independent vite (or webpack, nuxt, [vite|vue]press) projects in parallel. A developer should even be able to add a new vite+vue3 setup to another existing legacy webpack+vue2 setup within the same webhost. Such a setup requires running a proxy (i.e.: Nginx) in front of all projects.
-
-This repository aims to show a demo setup.
+Similar, a "__multi-vite__" setup should be able to serve multiple independent vite (or webpack, nuxt, [vite|vue]press) projects in parallel. A developer should even be able to add a new vite+vue3 setup to another existing legacy webpack+vue2 setup within the same webhost. Such a setup requires running a proxy (i.e.: Nginx) in front of all projects and setting the [base](https://vitejs.dev/guide/build.html#base) according to your proxies location paths.
 
 ## Prerequisites
 
@@ -50,12 +48,10 @@ Configure all vite instances to serve a baseUrl from their directory.
 import vue from '@vitejs/plugin-vue'
 
 export default {
+  base: '/admin/',
   plugins: [vue()],
   server: {
-    port: 8082, // <-- port dedicated to admin
-    hmr: {
-      path: 'admin/'
-    }
+    port: 8082 // <-- port dedicated to admin
   }
 }
 ```
@@ -65,12 +61,10 @@ export default {
 import vue from '@vitejs/plugin-vue'
 
 export default {
+  base: '/profile/',
   plugins: [vue()],
   server: {
-    port: 8081, // <-- port dedicated to profile
-    hmr: {
-      path: 'profile/'
-    }
+    port: 8081 // <-- port dedicated to profile
   }
 }
 ```
@@ -85,31 +79,56 @@ And connect those instances under the same domain with an Nginx proxy config lik
   location /profile/ {
     proxy_pass http://host.docker.internal:8081; 
   }
-
 ```
 
-Currently, vite needs two additional extra locations to provide access to its dev client, so we add:
+## Build
+
+With the `base` option in place, there is no particular dev setup needed. Each run of:
+
+```sh
+$ yarn build
+```
+
+will build your project with a base path as prefix right into `./dist`. So, for example, the default index.html of _admin_ repository will render like:
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <link rel="icon" href="/admin/favicon.ico" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vite App</title>
+  <script type="module" crossorigin src="/admin/assets/index.068891ee.js"></script>
+  <link rel="modulepreload" href="/admin/assets/vendor.cee31988.js">
+  <link rel="stylesheet" href="/admin/assets/index.b77793a3.css">
+</head>
+<body>
+  <div id="app"></div>
+</body>
+</html>
+```
+
+To finally serve such a PWA on a production environment, Nginx will get configured with a location like:
 
 ```nginx
-  location /@vite/ {
-    proxy_pass http://host.docker.internal:8081; 
-  }
-  
-  location /node_modules/ {
-    proxy_pass http://host.docker.internal:8081; 
-  }
+location /admin/ {
+  alias /path/to/your/admin/dist;
+  try_files $uri $uri/ /admin/index.html;
+}
 ```
-
-The only caveat I found yet: (Re-)using one `/@vite/client` shared across all instances breaks isolation and carries a risk of future incompatibilities throughout instances.
 
 ---
 
 ## Roadmap
 
-- configure the build setup
-- eliminate extra locations for `/@vite/` and `/node_modules/`
+- TBD
 
 ## Changelog
+
+### v0.1.0
+
+- since __vite@2.0.0-beta.50__: Droped extra locations for `/@vite/` and `/node_modules/` in favor of `base` option
 
 ### v0.0.0
 
